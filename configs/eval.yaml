@@ -1,0 +1,34 @@
+# Hugging Face artifacts
+model_repo_id: "Bocklitz-Lab/lit2vec-subfield-classifier-model"
+dataset_id: "Bocklitz-Lab/lit2vec-subfield-classifier-dataset"
+model_revision: "main"
+dataset_revision: "main"
+
+# Caching / outputs
+cache_dir: ".hf_cache_fresh"
+save_dir: "eval_outputs"
+
+# Model/data schema candidates
+model_file_candidates:
+  - "mlp_model.h5"
+  - "model.h5"
+  - "keras_model.h5"
+
+label_mapping_file_candidates:
+  - "label_mapping.json"
+  - "labels.json"
+
+embedding_field_candidates: ["embedding", "embeddings", "features", "x"]
+label_field_candidates: ["labels", "label", "y", "targets"]
+
+# Inference / eval
+batch_size: 256
+threshold: 0.5
+random_seed: 42
+
+# Download behavior
+force_redownload: true
+use_token: true   # use cached HF login; for older datasets lib it falls back automatically
+
+# Plots
+make_plots: true

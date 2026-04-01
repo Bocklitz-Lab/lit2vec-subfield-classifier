@@ -1,0 +1,9 @@
+numpy==1.26
+scikit-learn==1.2
+tensorflow==2.15,<2.16
+matplotlib==3.7
+wandb==0.16
+datasets==2.19
+pyarrow==12
+seaborn==0.13.2
+jinja2==3.1.6

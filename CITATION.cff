@@ -1,0 +1,41 @@
+cff-version: 1.2.0
+message: "If you use this code or dataset, please cite it as below."
+title: "lit2vec-tldr-bart: Legally Compliant Abstractive Summarization for Chemistry Literature"
+type: software
+
+authors:
+  - family-names: "YourLastName"
+    given-names: "YourFirstName"
+    affiliation: "Bocklitz Lab"
+    orcid: "https://orcid.org/0000-0000-0000-0000"
+  # add more authors as needed
+
+repository-code: "https://github.com/Bocklitz-Lab/lit2vec-tldr-bart"
+repository-artifact: "https://huggingface.co/Bocklitz-Lab/lit2vec-tldr-bart"
+repository-dataset: "https://huggingface.co/datasets/Bocklitz-Lab/lit2vec-tldr-bart-dataset"
+
+license: "Apache-2.0"   # or MIT (depending on what you choose for code)
+keywords:
+  - summarization
+  - chemistry
+  - scientific-papers
+  - NLP
+  - HuggingFace
+
+version: "1.0.0"
+date-released: "2025-08-21"
+
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.TBD"   # once you mint a Zenodo DOI for archival
+
+preferred-citation:
+  type: article
+  title: "Lit2Vec TL;DR: A Legally Compliant Abstractive Summarization Dataset for Chemistry Research"
+  authors:
+    - family-names: "YourLastName"
+      given-names: "YourFirstName"
+      affiliation: "Bocklitz Lab"
+  journal: "Scientific Data"
+  year: 2025
+  doi: "10.1038/sdata.TBD"   # replace after acceptance

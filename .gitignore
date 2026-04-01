@@ -1,0 +1,10 @@
+myenv/
+data/db.json
+output/
+data/
+logs/
+saved_data/
+wandb/
+src/__pycache__/
+models/
+notebooks/.hf_cache_fresh/

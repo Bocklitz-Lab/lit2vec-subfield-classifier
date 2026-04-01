@@ -1,0 +1,82 @@
+seed: 42
+mixed_precision: false
+
+dataset:
+  name: Bocklitz-Lab/lit2vec-subfield-classifier-dataset
+  train_split: train
+  val_split: validation
+  test_split: test
+  cache_dir: null
+  sample_limit: null      # e.g., 5000 for quick runs
+  shuffle_seed: 42
+
+model:
+  hidden_layers: [256, 256]
+  activation: relu
+  dropout: 0.3
+  batch_norm: true
+  learning_rate: 0.001
+  optimizer: adam
+
+training:
+  batch_size: 32
+  epochs: 50
+  threshold: 0.5
+  val_split_fraction: null  # used only if dataset has no explicit validation split
+  early_stopping:
+    enabled: true
+    monitor: val_loss
+    patience: 5
+    min_delta: 0.0
+  reduce_lr:
+    enabled: true
+    monitor: val_loss
+    factor: 0.5
+    patience: 3
+
+cross_validation:
+  enabled: true
+  n_folds: 5
+  shuffle: true
+  seed: 42
+
+class_weights:
+  enabled: true
+
+wandb:
+  enabled: true
+  project: mlp-multilabel-example
+  entity: null           # or your team/org
+  run_name: final_model
+  tags: [mlp, multilabel, lit2vec]
+
+io:
+  save_dir: saved_data
+  model_path: mlp_model.h5
+  history_path: training_history.json
+  test_x_path: test_embeddings.npy
+  test_y_path: test_labels.npy
+  label_mapping_path: label_mapping.json
+  f1_plot_path: f1_vs_freq.png
+
+# Optional: provide human-readable label names; if omitted, names will be "Label 0", ...
+labels:
+  label_to_index:
+    Catalysis: 0
+    Organic Chemistry: 1
+    Polymer Chemistry: 2
+    Inorganic Chemistry: 3
+    Materials Science: 4
+    Analytical Chemistry: 5
+    Physical Chemistry: 6
+    Biochemistry: 7
+    Environmental Chemistry: 8
+    Energy Chemistry: 9
+    Medicinal Chemistry: 10
+    Chemical Engineering: 11
+    Supramolecular Chemistry: 12
+    Radiochemistry & Nuclear Chemistry: 13
+    Forensic & Legal Chemistry: 14
+    Food Chemistry: 15
+    Chemical Education: 16
+    Others: 17
