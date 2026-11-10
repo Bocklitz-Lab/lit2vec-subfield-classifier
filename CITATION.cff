@@ -1,41 +1,56 @@
 cff-version: 1.2.0
-message: "If you use this code or dataset, please cite it as below."
-title: "lit2vec-tldr-bart: Legally Compliant Abstractive Summarization for Chemistry Literature"
+message: "If you use this code, the model or the dataset, please cite the paper listed under preferred-citation."
+title: "lit2vec-subfield-classifier"
 type: software
-
 authors:
-  - family-names: "YourLastName"
-    given-names: "YourFirstName"
-    affiliation: "Bocklitz Lab"
-    orcid: "https://orcid.org/0000-0000-0000-0000"
-  # add more authors as needed
-
-repository-code: "https://github.com/Bocklitz-Lab/lit2vec-tldr-bart"
-repository-artifact: "https://huggingface.co/Bocklitz-Lab/lit2vec-tldr-bart"
-repository-dataset: "https://huggingface.co/datasets/Bocklitz-Lab/lit2vec-tldr-bart-dataset"
-
-license: "Apache-2.0"   # or MIT (depending on what you choose for code)
+  - family-names: Amiri
+    given-names: Mahmoud
+    email: mahmoud.amiri@uni-jena.de
+    orcid: "https://orcid.org/0009-0001-3826-1789"
+    affiliation: "Leibniz Institute of Photonic Technology (Leibniz IPHT), Jena, Germany; Institute of Physical Chemistry and Abbe Center of Photonics, Friedrich Schiller University Jena, Germany"
+  - family-names: Jafari
+    given-names: Jamile Mohammad
+    orcid: "https://orcid.org/0009-0004-4116-018X"
+    affiliation: "Leibniz Institute of Photonic Technology (Leibniz IPHT), Jena, Germany; Institute of Physical Chemistry and Abbe Center of Photonics, Friedrich Schiller University Jena, Germany"
+  - family-names: Mostafapour
+    given-names: Sara
+    orcid: "https://orcid.org/0000-0002-1427-7372"
+    affiliation: "Leibniz Institute of Photonic Technology (Leibniz IPHT), Jena, Germany; Institute of Physical Chemistry and Abbe Center of Photonics, Friedrich Schiller University Jena, Germany"
+  - family-names: Bocklitz
+    given-names: Thomas
+    orcid: "https://orcid.org/0000-0003-2778-6624"
+    affiliation: "Leibniz Institute of Photonic Technology (Leibniz IPHT), Jena, Germany; Institute of Physical Chemistry and Abbe Center of Photonics, Friedrich Schiller University Jena, Germany"
+abstract: >-
+  Training and evaluation code for the subfield classifier of the Lit2Vec
+  workflow: a multi-label MLP on intfloat/e5-large-v2 embeddings that assigns
+  chemistry abstracts and summaries to 18 subfields.
+repository-code: "https://github.com/Bocklitz-Lab/lit2vec-subfield-classifier"
+url: "https://huggingface.co/Bocklitz-Lab/lit2vec-subfield-classifier-model"
+license: MIT
 keywords:
-  - summarization
+  - multi-label classification
   - chemistry
-  - scientific-papers
-  - NLP
-  - HuggingFace
-
-version: "1.0.0"
-date-released: "2025-08-21"
-
-identifiers:
-  - type: doi
-    value: "10.5281/zenodo.TBD"   # once you mint a Zenodo DOI for archival
-
+  - scientific text
+  - embeddings
+  - Lit2Vec
 preferred-citation:
   type: article
-  title: "Lit2Vec TL;DR: A Legally Compliant Abstractive Summarization Dataset for Chemistry Research"
+  title: "Lit2Vec: A Reproducible Workflow for Building a Legally Screened Chemistry Corpus from S2ORC for Downstream Retrieval and Text Mining"
   authors:
-    - family-names: "YourLastName"
-      given-names: "YourFirstName"
-      affiliation: "Bocklitz Lab"
-  journal: "Scientific Data"
-  year: 2025
-  doi: "10.1038/sdata.TBD"   # replace after acceptance
+    - family-names: Amiri
+      given-names: Mahmoud
+      orcid: "https://orcid.org/0009-0001-3826-1789"
+    - family-names: Jafari
+      given-names: Jamile Mohammad
+      orcid: "https://orcid.org/0009-0004-4116-018X"
+    - family-names: Mostafapour
+      given-names: Sara
+      orcid: "https://orcid.org/0000-0002-1427-7372"
+    - family-names: Bocklitz
+      given-names: Thomas
+      orcid: "https://orcid.org/0000-0003-2778-6624"
+  journal: "arXiv preprint arXiv:2604.12498"
+  year: 2026
+  month: 4
+  doi: "10.48550/arXiv.2604.12498"
+  url: "https://arxiv.org/abs/2604.12498"

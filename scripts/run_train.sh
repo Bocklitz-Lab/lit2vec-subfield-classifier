@@ -18,13 +18,13 @@ mkdir -p "$LOG_DIR"
 
 # ---- Sanity checks ----
 if [[ ! -f "$CONFIG_FILE" ]]; then
-  echo "❌ Config not found: $CONFIG_FILE"
+  echo "Config not found: $CONFIG_FILE"
   echo "   Pass a valid path: bash scripts/run_train.sh path/to/train.yaml"
   exit 1
 fi
 
 if [[ ! -f "$PYTHON_SCRIPT" ]]; then
-  echo "❌ train.py not found at: $PYTHON_SCRIPT"
+  echo "train.py not found at: $PYTHON_SCRIPT"
   exit 1
 fi
 
@@ -35,18 +35,18 @@ LOG_FILE="${LOG_DIR}/train_${TIMESTAMP}.log"
 # Optional: record git commit (if in a git repo)
 GIT_HASH="$(git -C "$PROJECT_ROOT" rev-parse --short HEAD 2>/dev/null || echo 'no-git')"
 
-echo "🚀 Starting training"
-echo "🗂  Project root : $PROJECT_ROOT"
-echo "⚙️  Config       : $CONFIG_FILE"
-echo "🔢 Git commit   : $GIT_HASH"
-echo "📝 Log file     : $LOG_FILE"
-echo "🐍 Python       : $(python3 -V 2>&1)"
+echo "Starting training"
+echo " Project root : $PROJECT_ROOT"
+echo " Config       : $CONFIG_FILE"
+echo "Git commit   : $GIT_HASH"
+echo "Log file     : $LOG_FILE"
+echo "Python       : $(python3 -V 2>&1)"
 
 # Optional: set CUDA device (uncomment to pin GPU)
 # export CUDA_VISIBLE_DEVICES=0
 
 # Optional: W&B env (prefer configuring in YAML; these will be used if YAML leaves them null)
-# export WANDB_PROJECT="mlp-multilabel-example"
+# export WANDB_PROJECT="lit2vec_subfield_classifier"
 # export WANDB_ENTITY="your_entity"
 
 # ---- Run ----
@@ -56,4 +56,4 @@ python3 "$PYTHON_SCRIPT" \
   2>&1 | tee "$LOG_FILE"
 set +x
 
-echo "✅ Training finished. Logs saved to: $LOG_FILE"
+echo "Training finished. Logs saved to: $LOG_FILE"

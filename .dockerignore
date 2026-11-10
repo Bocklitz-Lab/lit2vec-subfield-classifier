@@ -1,0 +1,9 @@
+.git
+myenv
+.venv
+data
+saved_data
+wandb
+logs
+notebooks/eval_outputs
+__pycache__

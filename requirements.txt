@@ -1,9 +1,17 @@
+# Training and evaluation of the subfield classifier
+tensorflow>=2.15,<2.16
 numpy==1.26
 scikit-learn==1.2
-tensorflow==2.15,<2.16
-matplotlib==3.7
-wandb==0.16
 datasets==2.19
 pyarrow==12
+PyYAML>=6.0
+wandb==0.16
+
+# Plots and notebooks
+matplotlib==3.7
 seaborn==0.13.2
+pandas
 jinja2==3.1.6
+
+# Only needed to embed new text (see the model card), not for training:
+# sentence-transformers==2.7.0

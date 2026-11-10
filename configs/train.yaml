@@ -1,3 +1,4 @@
+# Training settings of the released model. Used by:  python src/train.py --config configs/train.yaml
 seed: 42
 mixed_precision: false
 
@@ -44,8 +45,8 @@ class_weights:
   enabled: true
 
 wandb:
-  enabled: true
-  project: mlp-multilabel-example
+  enabled: true           # false: no Weights & Biases logging (the wandb package is then not needed)
+  project: lit2vec_subfield_classifier
   entity: null           # or your team/org
   run_name: final_model
   tags: [mlp, multilabel, lit2vec]

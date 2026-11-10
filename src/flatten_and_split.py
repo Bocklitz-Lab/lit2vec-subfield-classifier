@@ -1,3 +1,20 @@
+"""Flatten the annotated records and split them into train / validation / test JSONL files.
+
+Input: a folder with one JSON file per text. Each file has `corpus_id`, `text`, `text_type`
+("abstract" or "summary"), `embedding`, `label`, `field_classification` and a `metadata`
+object (doi, url, title, authors, venue, year, fields_of_study, publication_date, journal, license).
+
+Output: train.jsonl, validation.jsonl and test.jsonl, split 80% / 10% / 10% with a fixed seed.
+
+By default the split is random by record. Every paper contributes two records (abstract and
+summary) with identical labels, so a record split puts the two texts of a paper into different
+splits and the test set overlaps with the training set at the level of papers. The released
+dataset was built this way. Use --group-by-paper to keep all records of a paper in one split.
+
+    python src/flatten_and_split.py --input-dir entry_embeddings --output-dir output_splits
+    python src/flatten_and_split.py --group-by-paper
+"""
+import argparse
 import json
 import glob
 import os
@@ -95,21 +112,39 @@ def split_dataset(
     data: List[Dict[str, Any]],
     train_ratio: float = 0.8,
     val_ratio: float = 0.1,
-    seed: int = 42
+    seed: int = 42,
+    group_by_paper: bool = False,
 ) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]], List[Dict[str, Any]]]:
     """
     Shuffle and split the dataset into train, validation, and test sets.
+
+    With group_by_paper=True the split is done on `corpus_id`, so that all records of a paper
+    end up in the same split. The ratios then apply to papers, not to records.
     """
-    random.seed(seed)
-    random.shuffle(data)
+    if group_by_paper:
+        paper_ids = sorted({d["corpus_id"] for d in data})
+        random.Random(seed).shuffle(paper_ids)
+        n = len(paper_ids)
+        train_end = int(n * train_ratio)
+        val_end = train_end + int(n * val_ratio)
+        split_of = {}
+        for i, pid in enumerate(paper_ids):
+            split_of[pid] = 0 if i < train_end else (1 if i < val_end else 2)
+        parts = ([], [], [])
+        for d in data:
+            parts[split_of[d["corpus_id"]]].append(d)
+        train_data, val_data, test_data = parts
+    else:
+        random.seed(seed)
+        random.shuffle(data)
 
-    total = len(data)
-    train_end = int(total * train_ratio)
-    val_end = train_end + int(total * val_ratio)
+        total = len(data)
+        train_end = int(total * train_ratio)
+        val_end = train_end + int(total * val_ratio)
 
-    train_data = data[:train_end]
-    val_data = data[train_end:val_end]
-    test_data = data[val_end:]
+        train_data = data[:train_end]
+        val_data = data[train_end:val_end]
+        test_data = data[val_end:]
 
     logging.info(f"Split into: {len(train_data)} train / {len(val_data)} val / {len(test_data)} test")
     return train_data, val_data, test_data
@@ -129,18 +164,23 @@ def save_to_jsonl(data: List[Dict[str, Any]], output_path: str) -> None:
 # Main entry point
 # --------------------------- #
 if __name__ == "__main__":
-    INPUT_DIR = "entry_embeddings"
-    OUTPUT_DIR = "output_splits"
-    os.makedirs(OUTPUT_DIR, exist_ok=True)
+    parser = argparse.ArgumentParser(description="Flatten annotated records and split them into JSONL files")
+    parser.add_argument("--input-dir", default="entry_embeddings", help="Folder with one JSON file per text")
+    parser.add_argument("--output-dir", default="output_splits", help="Folder for train/validation/test.jsonl")
+    parser.add_argument("--group-by-paper", action="store_true",
+                        help="Split by corpus_id so that no paper appears in more than one split")
+    args = parser.parse_args()
 
-    logging.info(f"Starting processing from: {INPUT_DIR}")
-    flattened_records = process_json_files(INPUT_DIR)
+    os.makedirs(args.output_dir, exist_ok=True)
+
+    logging.info(f"Starting processing from: {args.input_dir}")
+    flattened_records = process_json_files(args.input_dir)
 
     if flattened_records:
-        train_data, val_data, test_data = split_dataset(flattened_records)
+        train_data, val_data, test_data = split_dataset(flattened_records, group_by_paper=args.group_by_paper)
 
-        save_to_jsonl(train_data, os.path.join(OUTPUT_DIR, "train.jsonl"))
-        save_to_jsonl(val_data, os.path.join(OUTPUT_DIR, "validation.jsonl"))
-        save_to_jsonl(test_data, os.path.join(OUTPUT_DIR, "test.jsonl"))
+        save_to_jsonl(train_data, os.path.join(args.output_dir, "train.jsonl"))
+        save_to_jsonl(val_data, os.path.join(args.output_dir, "validation.jsonl"))
+        save_to_jsonl(test_data, os.path.join(args.output_dir, "test.jsonl"))
     else:
         logging.warning("No valid JSON files were processed.")

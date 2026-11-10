@@ -1,161 +1,112 @@
-# Lit2Vec TL;DR – Training Code
+# lit2vec-subfield-classifier
 
-[![Hugging Face Dataset](https://img.shields.io/badge/🤗-Dataset-yellow)](https://huggingface.co/datasets/Bocklitz-Lab/lit2vec-tldr-bart-dataset)
-[![Hugging Face Model](https://img.shields.io/badge/🤗-Model-blue)](https://huggingface.co/Bocklitz-Lab/lit2vec-tldr-bart)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
+Training and evaluation code for the subfield classifier of the Lit2Vec workflow: a multi-label MLP that assigns chemistry abstracts and summaries to one or more of 18 subfields, working on `intfloat/e5-large-v2` embeddings. The code accompanies the paper:
 
-This repository contains the **training pipeline** for fine-tuning a lightweight DistilBART model on the  
-[Lit2Vec TL;DR Chemistry Dataset](https://huggingface.co/datasets/Bocklitz-Lab/lit2vec-tldr-bart-dataset).  
+> Amiri M, Jafari JM, Mostafapour S, Bocklitz T. *Lit2Vec: A Reproducible Workflow for Building a Legally Screened Chemistry Corpus from S2ORC for Downstream Retrieval and Text Mining.* arXiv:2604.12498 (2026). https://doi.org/10.48550/arXiv.2604.12498
 
-The goal: generate **legally compliant, schema-consistent TL;DR-style summaries** of chemistry abstracts, suitable for downstream use in semantic search, knowledge graphs, and scientific indexing.  
+Related resources: [model](https://huggingface.co/Bocklitz-Lab/lit2vec-subfield-classifier-model) · [dataset](https://huggingface.co/datasets/Bocklitz-Lab/lit2vec-subfield-classifier-dataset) · [demo](https://huggingface.co/spaces/Bocklitz-Lab/lit2vec-subfield-classifier-space) · [main Lit2Vec repository](https://github.com/Bocklitz-Lab/Lit2Vec-code)
 
----
+## Repository layout
 
-## 🚀 Quickstart
+```
+configs/train.yaml                   training settings of the released model
+configs/eval.yaml                    settings of the evaluation notebook
+src/train.py                         training script (cross-validation, final model, test report)
+src/flatten_and_split.py             builds the train/validation/test files from annotated records
+scripts/run_train.sh                 wrapper around src/train.py that writes a log
+scripts/download_dataset.sh          downloads the three JSONL files
+scripts/evaluate_unseen_papers.py    test metrics, also on the part of the test set without paper overlap
+notebooks/01_explore_dataset         statistics of the dataset
+notebooks/02_eval_and_visualize      evaluation of the released model, plots in notebooks/eval_outputs/
+```
 
-### 1. Clone repo & install requirements
-```bash
-git clone https://github.com/Bocklitz-Lab/lit2vec-tldr-bart.git
-cd lit2vec-tldr-bart
+## Setup
 
-# with conda
-conda create -n lit2vec python=3.10 -y
-conda activate lit2vec
-pip install -r requirements.txt
-
-# or with pip
-pip install -r requirements.txt
-````
-
-### 2. (Optional) Enable Weights & Biases logging
+Python 3.9 to 3.11 is required by TensorFlow 2.15 (we used 3.11). The model is small, so training runs on a CPU. The pinned versions match the environment of the released model.
 
 ```bash
-wandb login
-```
-
-### 3. Download dataset from Hugging Face
-
-The training script pulls the dataset automatically:
-
-```python
-from datasets import load_dataset
-ds = load_dataset("Bocklitz-Lab/lit2vec-tldr-bart-dataset")
-```
-
-### 4. Run training
-
-```bash
-python src/lit2vec_tldr/train.py --config configs/train_distilbart.yaml
-```
-
-Checkpoints will be saved in `saved_data/checkpoints/`,
-the final model in `saved_data/final_model/`.
-
----
-
-## 📂 Repo Structure
-
-```
-lit2vec-tldr-bart/
-├── README.md               # this file
-├── LICENSE
-├── CITATION.cff            # citation metadata
-├── requirements.txt
-├── configs/
-│   ├── train_distilbart.yaml   # training hyperparameters
-│   └── eval.yaml               # evaluation configs
-├── src/
-│   └── lit2vec_tldr/
-│       ├── train.py            # main training loop
-│       ├── preprocess.py       # tokenization & preprocessing
-│       ├── metrics.py          # ROUGE & helpers
-│       └── utils.py            # seeds, logging, etc.
-├── scripts/
-│   ├── run_train.sh
-│   └── export_model.sh
-├── saved_data/                 # (ignored by git)
-│   ├── cached_tokenized_data/
-│   ├── checkpoints/
-│   └── final_model/
-└── evaluation/
-    ├── test_metrics.json       # final evaluation results
-    └── plots/
-```
-
----
-
-## 📊 Reproducing Paper Results
-
-We provide:
-
-* **Dataset** → [lit2vec-tldr-bart-dataset](https://huggingface.co/datasets/Bocklitz-Lab/lit2vec-tldr-bart-dataset) (19,992 abstracts)
-* **Fine-tuned Model** → [lit2vec-tldr-bart](https://huggingface.co/Bocklitz-Lab/lit2vec-tldr-bart)
-* **Evaluation results** → stored in [`evaluation/test_metrics.json`](./evaluation/test_metrics.json)
-
-Run a final test evaluation:
-
-```bash
-python src/lit2vec_tldr/train.py --config configs/eval.yaml --evaluate
-```
-
----
-
-## 📖 Dataset
-
-* **Source**: 19,992 chemistry abstracts (CC BY licensed only)
-* **Input**: `abstract` field
-* **Target**: `summary` field (TL;DR-style, schema-consistent)
-* **Splits**: `train` (17,992) / `validation` (999) / `test` (1,001)
-
-👉 Full dataset card:
-[https://huggingface.co/datasets/Bocklitz-Lab/lit2vec-tldr-bart-dataset](https://huggingface.co/datasets/Bocklitz-Lab/lit2vec-tldr-bart-dataset)
-
----
-
-## 🧪 Evaluation Metrics
-
-* **ROUGE-1 / ROUGE-2 / ROUGE-L / ROUGE-Lsum**
-* Sentence segmentation handled with `nltk`
-* Final reported values are in `evaluation/test_metrics.json`
-
----
-
-## 🛠️ Requirements
-
-* Python ≥ 3.10
-* [PyTorch](https://pytorch.org/) with CUDA
-* Hugging Face `transformers`, `datasets`, `evaluate`
-* `nltk`, `tqdm`, `wandb` (optional for logging)
-
-Install via:
-
-```bash
+git clone https://github.com/Bocklitz-Lab/lit2vec-subfield-classifier.git
+cd lit2vec-subfield-classifier
+python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
----
+A `Dockerfile` for a CPU image is included. To embed new text with the trained model you also need `sentence-transformers`, as described in the [model card](https://huggingface.co/Bocklitz-Lab/lit2vec-subfield-classifier-model). Training itself does not, because the dataset already contains the embeddings.
 
-## 📜 Citation
+## Training
 
-If you use this code or dataset, please cite:
+```bash
+python src/train.py --config configs/train.yaml
+```
+
+The script loads the dataset named in the config from the Hugging Face Hub and then does two things:
+
+1. 5-fold cross-validation on train and validation together. The history of each fold is saved as `saved_data/fold_<k>_history.json`.
+2. The final training on the official train split with the validation split for early stopping, followed by an evaluation on the test split (a per-label classification report and the plot `f1_vs_freq.png`).
+
+Outputs go to `saved_data/`: `mlp_model.h5`, `training_history.json`, `label_mapping.json`, `test_embeddings.npy`, `test_labels.npy`. `bash scripts/run_train.sh` does the same and also writes a log file to `logs/`.
+
+Weights & Biases logging is on by default (`wandb login` first). Set `wandb.enabled: false` in the config to switch it off. The package is then not needed. For a quick trial, `dataset.sample_limit` limits every split to that many random records.
+
+Settings of the released model (`configs/train.yaml`):
+
+| | |
+|---|---|
+| Input | 1,024-dimensional e5-large-v2 embeddings |
+| Architecture | Dense(256, ReLU) - BatchNorm - Dropout(0.3), twice, then Dense(18, sigmoid) |
+| Loss | binary cross-entropy, weighted per class by negatives / positives of the training split |
+| Optimiser | Adam, learning rate 1e-3, batch size 32, at most 50 epochs |
+| Callbacks | early stopping on validation loss (patience 5, best weights restored), ReduceLROnPlateau (factor 0.5, patience 3) |
+| Seed | 42 |
+| Decision threshold | 0.5 |
+
+The final run of the released model stopped after 17 epochs and kept the weights of epoch 12.
+
+## Data
+
+The dataset has 39,900 records from 19,992 papers (an abstract and a GPT-4o summary per paper) with 18 subfield labels that were generated by GPT-4o. It is split 80% / 10% / 10% into 31,920 / 3,990 / 3,990 records. See the [dataset card](https://huggingface.co/datasets/Bocklitz-Lab/lit2vec-subfield-classifier-dataset) for the fields, the label counts.
+
+`src/flatten_and_split.py` builds the three files from a folder of annotated records. That folder is not published, so the released split cannot be regenerated from this repository.
+
+
+## Evaluation
+
+`notebooks/02_eval_and_visualize.ipynb` evaluates the released model on the test split with the settings of `configs/eval.yaml`. The plots (confusion matrix, ROC and precision-recall curves, F1 versus label frequency, threshold sweep) and the numbers (`metrics_summary.json`, `final_classification_report.csv`) are saved in `notebooks/eval_outputs/`.
+
+On the full test split (3,990 records, threshold 0.5) the model reaches micro-F1 0.808, macro-F1 0.748 and weighted-F1 0.800, with a micro-averaged ROC-AUC of 0.984 and PR-AUC of 0.901.
+
+`scripts/evaluate_unseen_papers.py` repeats the evaluation and also reports it on the test records whose paper does not occur in the training split. It gives:
+
+| Test records | n | Micro F1 | Macro F1 | Weighted F1 |
+|---|---:|---:|---:|---:|
+| All | 3,990 | 0.808 | 0.748 | 0.800 |
+| Paper not in the training split | 838 | 0.804 | 0.707 | 0.794 |
+| Paper not in training or validation | 417 | 0.790 | 0.680 | 0.775 |
+
+Micro-averaged scores are almost unchanged. Macro-F1 is lower on the subsets, partly because the rare classes have only a handful of examples there.
+
+
+
+## License
+
+The code is released under the MIT License (see [`LICENSE`](LICENSE)). The model weights are released under Apache-2.0 and the dataset under CC BY 4.0. The labels and summaries of the dataset were generated with GPT-4o, so check OpenAI's terms of use if you plan to use them to train other models.
+
+## Citation
+
+Please cite the Lit2Vec paper:
 
 ```bibtex
-@misc{lit2vec_tldr_2025,
-  author       = {Bocklitz Lab},
-  title        = {Lit2Vec TL;DR: Legally Compliant Abstractive Summaries for Chemistry Abstracts},
-  year         = {2025},
-  publisher    = {Hugging Face},
-  howpublished = {\url{https://huggingface.co/datasets/Bocklitz-Lab/lit2vec-tldr-bart-dataset}},
-  note         = {Submitted to Nature Scientific Data}
+@misc{amiri2026lit2vec,
+  title         = {Lit2Vec: A Reproducible Workflow for Building a Legally Screened Chemistry Corpus from S2ORC for Downstream Retrieval and Text Mining},
+  author        = {Amiri, Mahmoud and Jafari, Jamile Mohammad and Mostafapour, Sara and Bocklitz, Thomas},
+  year          = {2026},
+  eprint        = {2604.12498},
+  archivePrefix = {arXiv},
+  doi           = {10.48550/arXiv.2604.12498},
+  url           = {https://arxiv.org/abs/2604.12498}
 }
 ```
 
----
+## Acknowledgements
 
-## 🙌 Acknowledgements
-
-* Built with [Hugging Face Transformers](https://huggingface.co/docs/transformers)
-* Dataset derived from [Semantic Scholar](https://www.semanticscholar.org/) metadata and CC-BY publishers
-* Initial summaries generated with GPT-4o, distilled into DistilBART
-
----
+The work was developed in the Bocklitz Lab at the Leibniz Institute of Photonic Technology (Leibniz IPHT) and Friedrich Schiller University Jena and was funded by the BMFTR within the programme Photonics Research Germany (13N15466, 13N15710, 13N15715). The abstracts come from S2ORC, provided by the Allen Institute for AI and the Semantic Scholar team. Questions: mahmoud.amiri@uni-jena.de.

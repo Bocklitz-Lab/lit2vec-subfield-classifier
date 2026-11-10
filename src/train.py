@@ -1,3 +1,13 @@
+"""Train the Lit2Vec subfield classifier (an MLP on e5-large-v2 embeddings).
+
+Run from the repository root:
+
+    python src/train.py --config configs/train.yaml
+
+The data are read from the Hugging Face dataset named in the config. Weights & Biases logging
+is optional (wandb.enabled in the config).
+"""
+
 import os
 import json
 import argparse
@@ -11,7 +21,11 @@ from sklearn.model_selection import KFold, train_test_split
 from sklearn.preprocessing import MultiLabelBinarizer
 from sklearn.metrics import classification_report
 import matplotlib.pyplot as plt
-import wandb
+
+try:
+    import wandb
+except ImportError:  # only needed when wandb.enabled is true
+    wandb = None
 
 
 # =========================
@@ -174,7 +188,7 @@ def build_callbacks(cfg_training: Dict[str, Any], wandb_enabled: bool):
 # =========================
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", type=str, default="config/train.yaml", help="Path to YAML config")
+    parser.add_argument("--config", type=str, default="configs/train.yaml", help="Path to YAML config")
     args = parser.parse_args()
 
     with open(args.config, "r") as f:
@@ -216,7 +230,7 @@ def main():
     sample_limit = ds_cfg.get("sample_limit", None)
     shuffle_seed = ds_cfg.get("shuffle_seed", seed)
 
-    print(f"📦 Loading dataset: {ds_name}")
+    print(f"Loading dataset: {ds_name}")
     ds = load_dataset(ds_name, cache_dir=cache_dir)
 
     # Sanity: splits
@@ -245,7 +259,7 @@ def main():
         rng = np.random.default_rng(shuffle_seed)
         rng.shuffle(idx)
         ss = idx[:n]
-        return X[ss], [y_i for i, y_i in enumerate(y) if i in set(ss)]
+        return X[ss], [y[i] for i in ss]
 
     X_train_split, raw_train_labels = maybe_subsample(X_train_split, raw_train_labels, sample_limit)
     if has_val:
@@ -280,12 +294,12 @@ def main():
     else:
         Y_test = None
 
-    print(f"✅ Using {num_classes} classes.")
-    print(f"✅ Train shapes: X={X_train_split.shape}, Y={Y_train_split.shape}")
+    print(f"Using {num_classes} classes.")
+    print(f"Train shapes: X={X_train_split.shape}, Y={Y_train_split.shape}")
     if has_val:
-        print(f"✅ Val   shapes: X={X_val_split.shape}, Y={Y_val_split.shape}")
+        print(f"Val   shapes: X={X_val_split.shape}, Y={Y_val_split.shape}")
     if has_test:
-        print(f"✅ Test  shapes: X={X_test_split.shape}, Y={Y_test.shape}")
+        print(f"Test  shapes: X={X_test_split.shape}, Y={Y_test.shape}")
 
     # Save label mapping for reporting
     if label_to_index_used:
@@ -295,13 +309,15 @@ def main():
         label_to_index_used = {name: i for i, name in enumerate(label_names)}
     with open(label_mapping_out, "w") as f:
         json.dump({"label_to_index": label_to_index_used, "index_to_label": index_to_label}, f)
-    print(f"💾 Saved label mapping → {label_mapping_out}")
+    print(f"Saved label mapping → {label_mapping_out}")
 
     input_size = X_train_split.shape[1]
 
     # ----- W&B -----
     wb_cfg = cfg.get("wandb", {})
     wb_enabled = bool(wb_cfg.get("enabled", True))
+    if wb_enabled and wandb is None:
+        raise ImportError("wandb is not installed. Install it or set wandb.enabled: false in the config.")
     wb_project = wb_cfg.get("project", "mlp-multilabel-example")
     wb_entity = wb_cfg.get("entity", None)
     wb_tags = wb_cfg.get("tags", ["mlp", "multilabel"])
@@ -314,7 +330,7 @@ def main():
     cv_seed = int(cv_cfg.get("seed", seed))
 
     if do_cv:
-        print("\n🔁 Running K-Fold CV on train+validation...")
+        print("\nRunning K-Fold CV on train+validation...")
         if has_val:
             X_tv = np.concatenate([X_train_split, X_val_split], axis=0)
             raw_tv_labels = list(raw_train_labels) + list(raw_val_labels)
@@ -341,7 +357,7 @@ def main():
             Y_tr, Y_va = Y_tv[tr_idx], Y_tv[va_idx]
 
             class_weights_fold = get_class_weights(Y_tr) if cfg.get("class_weights", {}).get("enabled", True) else None
-            print(f"✅ Computed class weights (fold {fold_idx+1}): {np.round(class_weights_fold, 2) if class_weights_fold is not None else 'disabled'}")
+            print(f"Computed class weights (fold {fold_idx+1}): {np.round(class_weights_fold, 2) if class_weights_fold is not None else 'disabled'}")
 
             model_cfg = cfg.get("model", {})
             model = build_mlp(
@@ -370,17 +386,17 @@ def main():
             # Save fold history
             fold_history_path = os.path.join(save_dir, f"fold_{fold_idx+1}_history.json")
             save_history_json(history, fold_history_path)
-            print(f"💾 Saved Fold {fold_idx + 1} history → {fold_history_path}")
+            print(f"Saved Fold {fold_idx + 1} history → {fold_history_path}")
 
             # Evaluate fold
             val_loss, val_binary_acc, val_roc_auc, val_pr_auc = model.evaluate(X_va, Y_va, verbose=0)
             fold_accuracies.append(val_binary_acc)
 
             print(f"Fold {fold_idx + 1} Metrics:")
-            print(f"  🔹 Loss         : {val_loss:.4f}")
-            print(f"  🔹 Binary Acc   : {val_binary_acc * 100:.2f}%")
-            print(f"  🔹 ROC AUC      : {val_roc_auc:.4f}")
-            print(f"  🔹 PR AUC       : {val_pr_auc:.4f}")
+            print(f"  Loss         : {val_loss:.4f}")
+            print(f"  Binary Acc   : {val_binary_acc * 100:.2f}%")
+            print(f"  ROC AUC      : {val_roc_auc:.4f}")
+            print(f"  PR AUC       : {val_pr_auc:.4f}")
 
             if wb_enabled:
                 wandb.log({
@@ -391,10 +407,10 @@ def main():
                 })
                 wandb.finish()
 
-        print(f"\n✅ Mean CV Binary Accuracy: {np.mean(fold_accuracies) * 100:.2f}% (+/- {np.std(fold_accuracies) * 100:.2f}%)")
+        print(f"\nMean CV Binary Accuracy: {np.mean(fold_accuracies) * 100:.2f}% (+/- {np.std(fold_accuracies) * 100:.2f}%)")
 
     # ----- Final Train / Validate -----
-    print("\n🏁 Training final model on official splits...")
+    print("\nTraining final model on official splits...")
     # If no explicit validation split, optionally carve from train
     tr_cfg = cfg.get("training", {})
     if not has_val and tr_cfg.get("val_split_fraction", None):
@@ -403,7 +419,7 @@ def main():
             X_train_split, Y_train_split, test_size=val_frac, random_state=seed, shuffle=True
         )
         has_val = True
-        print(f"ℹ️ Created validation split from train: val_fraction={val_frac}")
+        print(f"ℹCreated validation split from train: val_fraction={val_frac}")
 
     label_counts = np.sum(Y_train_split, axis=0)
 
@@ -453,15 +469,15 @@ def main():
 
     # Save model & history
     model.save(model_path)
-    print(f"💾 Final model saved → {model_path}")
+    print(f"Final model saved → {model_path}")
     save_history_json(final_history, history_path)
-    print(f"💾 Final training history saved → {history_path}")
+    print(f"Final training history saved → {history_path}")
 
     # ----- Save test arrays (if available) -----
     if has_test:
         np.save(test_x_path, X_test_split)
         np.save(test_y_path, Y_test)
-        print(f"💾 Test split saved → {test_x_path}, {test_y_path}")
+        print(f"Test split saved → {test_x_path}, {test_y_path}")
 
     # ----- Final evaluation on test (if available) -----
     if has_test:
@@ -481,7 +497,7 @@ def main():
 
         f1_scores = [report[label]["f1-score"] for label in label_names]
         plot_f1_vs_label_freq(label_counts, f1_scores, label_names, f1_plot_path)
-        print(f"📈 Saved F1 vs Frequency plot → {f1_plot_path}")
+        print(f"Saved F1 vs Frequency plot → {f1_plot_path}")
 
         if wb_enabled:
             wandb.log({"f1_vs_freq_plot": wandb.Image(f1_plot_path)})

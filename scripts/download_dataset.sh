@@ -8,7 +8,7 @@ SPLITS=("train" "validation" "test")
 
 mkdir -p "$OUT_DIR"
 
-echo "📥 Downloading dataset from Hugging Face: $HF_DATASET"
+echo "Downloading dataset from Hugging Face: $HF_DATASET"
 
 for split in "${SPLITS[@]}"; do
     URL="https://huggingface.co/datasets/${HF_DATASET}/resolve/main/data/${split}.jsonl"
@@ -17,8 +17,8 @@ for split in "${SPLITS[@]}"; do
     curl -L -o "$OUT_FILE" "$URL"
     # quick JSONL sanity check
     head -n 1 "$OUT_FILE" | jq . >/dev/null 2>&1 \
-      && echo "    ✅ ${split}.jsonl looks valid" \
-      || echo "    ⚠️ Warning: ${split}.jsonl might be malformed"
+      && echo "    ${split}.jsonl looks valid" \
+      || echo "    Warning: ${split}.jsonl might be malformed"
 done
 
-echo "🎉 Dataset ready in ${OUT_DIR}/"
+echo "Dataset ready in ${OUT_DIR}/"
